@@ -1,5 +1,4 @@
 from aiogram import Bot, Dispatcher, executor, types
-from aiogram.utils.exceptions import NetworkError
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher import FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
@@ -7,7 +6,6 @@ from bs4 import BeautifulSoup
 from random import randint
 import requests
 import sqlite3
-from django.conf import settings
 import telegram
 from datetime import date
 
@@ -26,7 +24,7 @@ You need to upload the photo from your device, don't upload it directly from Tel
 
 chat = """❤️ And don't forget to join our chat, where we share up-to-date information about FB uploads, tricks, and much more."""
 
-TOKEN = 'ENTER BOT TOKEN HERE'
+TOKEN = '7317617514:AAHy4weIjo0XzK4trvAs_3gdxJzuiWlWrAA'
 
 admins = [242494911, 689892377, 983265598]
 
