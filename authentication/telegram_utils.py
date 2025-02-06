@@ -2,7 +2,7 @@ from telegram import Bot
 from telegram.error import TelegramError
 from telegram.ext import Application
 
-TOKEN = '7317617514:AAHy4weIjo0XzK4trvAs_3gdxJzuiWlWrAA'
+TOKEN = 'your bot token'
 
 async def get_username_from_telegram(user_id):
     # Create a Telegram bot instance
