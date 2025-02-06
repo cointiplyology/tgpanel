@@ -20,14 +20,16 @@ async def get_username_from_telegram(user_id):
         return None
     
 async def send_message_to_telegram_user(user_id, message):
-    # Create a Telegram bot instance
     bot = Bot(token=TOKEN)
 
     try:
-        await bot.send_message(chat_id=user_id, text=message)
-
+        print(f"📨 Sending message to {user_id}...")  # Debugging
+        response = await bot.send_message(chat_id=user_id, text=message)
+        print(f"✅ Message sent: {response}")  # Log response from Telegram
     except TelegramError as e:
-        print('An error occurred while sending the message:', e)
+        print(f"❌ Telegram Error: {e}")
+    except Exception as e:
+        print(f"❌ Unexpected Error: {e}")
 
 async def send_message_to_telegram_user_with_image(user_id, message, image_data):
     # Create a Telegram bot instance
